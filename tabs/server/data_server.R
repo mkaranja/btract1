@@ -146,14 +146,10 @@ dataserver <- function(env_serv) with(env_serv, local({
   
   summaryIn <- reactive({
     result = banana() %>%
-      dplyr::select(Location, Crossnumber,FemaleGenotype,`Female Plot Name`, MaleGenotype,
-                    `Female Ploidy`,`Male Ploidy`,`First Pollination Date`,`Bunch Harvest Date`,
+      dplyr::select(Location, Crossnumber,FemaleGenotype,FemalePlotName, MaleGenotype,
+                    `First Pollination Date`,`Bunch Harvest Date`,
                     `Total Seeds`, `Good Seeds`,`Number of Embryo Rescued`,`Number of Embryo Germinating`) %>%
-      dplyr::filter(FemaleGenotype !='' & MaleGenotype !='') %>%
-      dplyr::rename("FemalePloidy" = "Female Ploidy",
-                    "MalePloidy" = "Male Ploidy",
-                    "FemalePlotName" = "Female Plot Name")
-    
+      dplyr::filter(FemaleGenotype !='' & MaleGenotype !='') 
     
     result$Bunches = ifelse(!is.na(result$`Bunch Harvest Date`), 1,0)
     result$`Bunch Harvest Date` = NULL
