@@ -52,7 +52,7 @@ BTracTFooter <- function() tagList(
          <div class="row">
          <div class="col-sm-2 col-sm-offset-3">
          <a href = "http://breedingbetterbananas.org/">
-         <img src = "betterbananaLogo.png", height="65", width="120">
+         <img src = "bbb.png", height="65", width="120">
          </a>
          </div>
          <div class="col-sm-2">
