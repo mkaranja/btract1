@@ -1,5 +1,7 @@
-source("cleantable.R", local = T)
+source("data_prep/cleantable.R", local = T)
 activities = c("Flowering","First pollination","Repeat pollination","Bunch Harvesting","Harvested bunches","Seed Extraction","Seed extraction","Embryo Rescue","Germination")
+datemin <- min(as.Date(cleantable()$Date))
+datemax <- max(as.Date(cleantable()$Date))
 
 # searchbar
 aa = setorder(cleantable(),Accession, -Date)
