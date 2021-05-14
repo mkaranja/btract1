@@ -19,9 +19,9 @@ statuspage <- function()tagList(
                                        DT::dataTableOutput("current_Table")
                   )
          ),
-         tabPanel('Schedule',
-                  uiOutput('schedulerOut')
-                  ),
+         # tabPanel('Schedule',
+         #          uiOutput('schedulerOut')
+         #          ),
          
          tabPanel("Data flow",
                   fluidRow(
