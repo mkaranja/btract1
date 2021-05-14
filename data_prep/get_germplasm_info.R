@@ -1,5 +1,5 @@
 library(brapir)
-banana <- read_csv("data/banana.csv")
+#banana <- read_csv("../data/banana.csv")
 
 # standardise genotypes as per musabase
 
@@ -55,12 +55,15 @@ banana$MaleGenotype = ifelse(banana$MaleGenotype %in% "Datil","ITC1252-Datil", b
 banana$MaleGenotype = ifelse(banana$MaleGenotype %in% "Mlali","ITC1564-Mlali", banana$MaleGenotype)
 banana$MaleGenotype = ifelse(banana$MaleGenotype %in% "Nakitengwa","ITC0085-Nakitengwa", banana$MaleGenotype)
 
+banana$MaleGenotype = ifelse(banana$MaleGenotype %in% c("ITC1455-Mchare Mlelembo", "ITC.1455_Mshale Mlelembo","Mshale-Mlelembo", "Mshare Mlelembo"),"ITC1455-Mchare Mlelembo", banana$MaleGenotype)
+banana$MaleGenotype = ifelse(banana$MaleGenotype %in% c("Mchare Laini", "MchareLaini"),"Mchare Laini", banana$MaleGenotype)
+banana$MaleGenotype = ifelse(banana$MaleGenotype %in% c("Kisukari Mchare","Kisukari-Mchare"),"Kisukari-Mchare", banana$MaleGenotype)
 
 
 genotypes <- unique(c(banana$FemaleGenotype, banana$MaleGenotype))
 
 # accessions
-
+library(brapir)
 con = brapi_db()$musabase
 
 germplasm_list = list()
@@ -85,17 +88,16 @@ for (x in genotypes){
 }
 
 
-df <- do.call(rbind.fill,germplasm_list) %>%
+df <- do.call(plyr::rbind.fill,germplasm_list) %>%
   dplyr::select(germplasmDbId, germplasmName, synonyms)
 df %<>% mutate_all(as.character)
 
 # split synonyms
 synonmys <- do.call(rbind, stringr::str_split(df$synonyms,";"))
-
 prefix <- "germplasmName"
 suffix <- seq(1:ncol(synonmys))
 snames <- paste0(prefix, suffix, sep = "")
-
+synonmys <- as.data.frame(synonmys)
 colnames(synonmys) <- snames
 
 germplasm_df <- cbind(df, synonmys) %>%
@@ -104,6 +106,7 @@ germplasm_df$germplasmName <- trimws(germplasm_df$germplasmName)
 germplasm_df <- unique(germplasm_df)
 germplasm_df$id <- NULL
 germplasm_df$synonyms <- NULL
+germplasm_df %<>% mutate_all(as.character)
 
 
 
@@ -120,18 +123,24 @@ germplasm_info$germplasmPUI <- paste0('<a  target=_blank href=', paste0("https:/
 germplasm_info[,c("attributeCode","germplasmDbId")] <- NULL
 germplasm_info <- unique(germplasm_info)
 colnames(germplasm_info) <- c("germplasmName", "Ploidy","Link")
+germplasm_info$Ploidy <- toupper(germplasm_info$Ploidy)
+germplasm_info <- germplasm_info[!duplicated(germplasm_info),]
+# germplasm_info$FemaleGenotype<- germplasm_info$germplasmName
+# germplasm_info$MaleGenotype<- germplasm_info$germplasmName
+# germplasm_info$Female_Ploidy <- germplasm_info$Ploidy
+# germplasm_info$Male_Ploidy <- germplasm_info$Ploidy
+# germplasm_info$Female_Link <- germplasm_info$Link
+# germplasm_info$Male_Link <- germplasm_info$Link
+# 
+# ITC1460-Ijihu_Inkundu
+# 
+# 
+# germplasm_info[,c("germplasmName","Ploidy","Link")] <- NULL
+x <- germplasm_info[duplicated(germplasm_info$Link),] %>%
+  dplyr::group_by(Link) %>%
+  dplyr::mutate(n=n()) %>%
+  ungroup()
+z = spread(x, key = germplasmName, value = n )
 
-germplasm_info$FemaleGenotype<- germplasm_info$germplasmName
-germplasm_info$MaleGenotype<- germplasm_info$germplasmName
-germplasm_info$Female_Ploidy <- germplasm_info$Ploidy
-germplasm_info$Male_Ploidy <- germplasm_info$Ploidy
-germplasm_info$Female_Link <- germplasm_info$Link
-germplasm_info$Male_Link <- germplasm_info$Link
-
-
-
-
-germplasm_info[,c("germplasmName","Ploidy","Link")] <- NULL
-
-write_csv(germplasm_info, file = 'data/germplasm_info.csv')
-
+write_csv(z, file = 'germplasm_info.csv')
+# 

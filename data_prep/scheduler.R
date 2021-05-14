@@ -1,35 +1,36 @@
-source("data_prep/cleantable.R", local = T)
+#source("data_prep/cleantable.R", local = T)
 
 dt <- cleantable()%>%
   arrange(Date = as.Date(Date, "%d-%m-%Y"))
-df = dt[!duplicated(dt[,1:4]),]
-df = df[!duplicated(df$Accession),] %>%
+df <- dt[!duplicated(dt[,1:4]),]
+df <- df[!duplicated(df$Accession),] %>%
   setDT()
-df = df[Activity != "Flowering"][,-c(5:6)]
+df <- df[Activity != "Flowering"][,-c(5:6)]
 
 # days elapsed
-df$`Days Elapsed` = Sys.Date()-df$Date
+df$`Days Elapsed` <- Sys.Date()-df$Date
 
 # mean number of days between activities
-dff <- banana() %>%
+dff <- banana %>%
   dplyr::left_join(
     repeatpollination()
     )
 colnames(dff) <- gsub("_"," ", names(dff))
-
+dff$`Days to Maturity` <- lubridate::date(dff$`Bunch Harvest Date`) - lubridate::date(dff$`First Pollination Date`)
+dff$`Days in ripening shed` <- lubridate::date(dff$`Seed Extraction Date`) - lubridate::date(dff$`Bunch Harvest Date`)
 dff$`Days to Germination` <- lubridate::date(dff$`Germination Date`) - lubridate::date(dff$`Embryo Rescue Date`)
-dff$`Days to Embryo Rescue` = lubridate::date(dff$`Embryo Rescue Date`) - lubridate::date(dff$`Seed Extraction Date`)
+dff$`Days to Embryo Rescue` <- lubridate::date(dff$`Embryo Rescue Date`) - lubridate::date(dff$`Seed Extraction Date`)
 dff$`Days to Repeat Pollination` <- as.Date(dff$`Repeat Pollination Date`, "1970-01-01") - 
   as.Date(dff$`First Pollination Date`, "1970-01-01")
 
-mean_days_to_repeatpollination = mean(as.integer(na.omit(dff$`Days to Repeat Pollination`))) %>% floor() # to repeat
-mean_days_to_maturity = mean(as.integer(na.omit(dff$`Days to Maturity`))) %>% floor() # to harvest
-mean_days_in_ripening = mean(as.integer(na.omit(dff$`Days in ripening shed`))) %>% floor() # to extraction
-mean_days_to_embryo_rescue = mean(as.integer(na.omit(dff$`Days to Embryo Rescue`))) %>% floor() # to rescue
-mean_days_to_germination = mean(as.integer(na.omit(dff$`Days to Germination`))) %>% floor() # to germination
+mean_days_to_repeatpollination <- mean(as.integer(na.omit(dff$`Days to Repeat Pollination`))) %>% floor() # to repeat
+mean_days_to_maturity <- mean(as.integer(na.omit(dff$`Days to Maturity`))) %>% floor() # to harvest
+mean_days_in_ripening <- mean(as.integer(na.omit(dff$`Days in ripening shed`))) %>% floor() # to extraction
+mean_days_to_embryo_rescue <- mean(as.integer(na.omit(dff$`Days to Embryo Rescue`))) %>% floor() # to rescue
+mean_days_to_germination <- mean(as.integer(na.omit(dff$`Days to Germination`))) %>% floor() # to germination
 
 
-df$status = ifelse(df$Activity=='First pollination' & df$`Days Elapsed` > (mean_days_to_repeatpollination+5), "Overdue",
+df$status <- ifelse(df$Activity=='First pollination' & df$`Days Elapsed` > (mean_days_to_repeatpollination+5), "Overdue",
                 ifelse(df$Activity=='First pollination' & df$`Days Elapsed` >= mean_days_to_repeatpollination-5 & df$`Days Elapsed` <= mean_days_to_repeatpollination+5, "Ready",
                     ifelse(df$Activity=='First pollination' & df$`Days Elapsed` >= mean_days_to_repeatpollination-10 & df$`Days Elapsed` <= mean_days_to_repeatpollination-5, "Approaching",
                            ifelse(df$Activity=='First pollination' & df$`Days Elapsed` < mean_days_to_repeatpollination-10, "Wait",
@@ -65,6 +66,5 @@ schedulerdata$NextActivity = ifelse(schedulerdata$Activity=="First pollination",
                                           ifelse(schedulerdata$Activity=="Harvested bunches","Seed Extraction",
                                                  ifelse(schedulerdata$Activity=="Seed extraction","Embryo Rescue",
                                                         ifelse(schedulerdata$Activity=="Embryo Rescue","Germination",'')))))
-schedulerdata = schedulerdata[,c("Location", "Accession","Date", "Activity","Days Elapsed", "status", "NextActivity")]
-colnames(schedulerdata)[4] = "CurrentActivity"
+#schedulerdata <- schedulerdata[,c("Location", "Accession","CurrentActivity","Days Elapsed", "status", "NextActivity")]
 

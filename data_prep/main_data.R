@@ -32,53 +32,32 @@ contamination <- function(){
   return(dt)
 }
 
+banana <- readr::read_csv("data/banana.csv")
+banana[,c("Location", "FemaleGenotype","MaleGenotype","FemalePloidy", "MalePloidy")] %<>% 
+  dplyr::mutate_all(as.factor)
+     
+banana[,c("Cycle", "Number of Repeats","Total Seeds", "Good Seeds", "Number of Embryo Rescued", "Number of Embryo Germinating")] %<>%             
+  dplyr::mutate_all(as.integer)
 
-crosses <- function(){
-  dt <- list.files(patt="*BananaData.csv$", recursive = TRUE) %>%
-    lapply(read_csv) %>%
-    rbind.fill() %>%
-    unique() %>%
-    dplyr::rename(
-      "FemaleGenotype" = 'Mother',
-      "MaleGenotype" = 'Father'
-    )
-  dt[,grep("Date", names(dt))] %<>% mutate_all(as.Date, origin = "1970-01-01")
-  return(dt)
-}
-
-arusha_crosses2015 <- function(){
-  dt <- read_csv("data/Last_6_months_tisssue_culture_data.csv")  %>%
-    unique()
-  dt[c("contamination","badseeds",grep("^days", names(dt), value = T))] <- NULL
-  colnames(dt) <- c("Location","Crossnumber","FemaleGenotype","MaleGenotype",
-                    "First_Pollination_Date","Bunch_Harvest_Date",
-                    "Seed_Extraction_Date", "Total_Seeds",
-                    "Good_Seeds","Number_of_Embryo_Rescued",
-                    "Embryo_Rescue_Date", "Germination_Date",
-                    "Number_of_Embryo_Germinating")
-  return(dt)
-}
-
-banana <- function(){
-  dt <- plyr::rbind.fill(crosses(), arusha_crosses2015()) %>%
-    dplyr::select(
-      Location, Crossnumber, everything()
-    )
-  dt[,c("Location","Crossnumber", "FemaleGenotype","MaleGenotype")] %<>% mutate_all(as.factor)
-  colnames(dt) <- gsub("_"," ", names(dt))
-  return(dt)
-}
+banana[, grep("Date", names(banana), value = T)] %<>%
+  dplyr::mutate_all(anytime::anydate)
+banana$TrialName <- NULL
+banana <- banana %>%
+  dplyr::select(Location, Crossnumber, starts_with("Female"), Cycle, starts_with("Male"), everything())
 
 plantlets <- function(){
   dt <- list.files(patt="*PlantletsData.csv$", recursive = TRUE) %>%
     lapply(read_csv) %>%
     rbind.fill() %>%
     unique() %>%
-    dplyr::rename(
-      "FemaleGenotype" = 'Mother',
-      "MaleGenotype" = 'Father'
-    ) %>%
     dplyr::filter(!is.na(Location))
+  dt <- dt %>%
+    dplyr::left_join(
+      banana %>%
+        dplyr::select(Crossnumber, FemaleGenotype,MaleGenotype)
+    )
+  dt[,c("Mother", "Father")] <- NULL
+    
   dt[,c("Location","Crossnumber", "FemaleGenotype","MaleGenotype")] %<>% mutate_all(as.factor)
   dt[,grep("Date", names(dt))] %<>% mutate_all(as.Date, origin = "1970-01-01")
   dt[,grep("Number", names(dt))] %<>% mutate_all(as.integer)

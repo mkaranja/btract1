@@ -6,7 +6,7 @@ source("data_prep/other_labels.R", local = T)
 cleantable <- function(){
   
   # F.Polln
-  first_pollination <- banana() %>%
+  first_pollination <- banana %>%
     dplyr::select(Location, Crossnumber, FemaleGenotype, MaleGenotype, `First Pollination Date`) %>%
     .[complete.cases(.),]
   colnames(first_pollination) <- c("Location","Accession","FemaleGenotype","MaleGenotype","Date")
@@ -23,14 +23,14 @@ cleantable <- function(){
   repeat_pollination$Activity <- 'Repeat pollination'
   
   # Harvest
-  harvest <- banana() %>%
+  harvest <- banana %>%
     dplyr::select(Location, Crossnumber, FemaleGenotype, MaleGenotype, `Bunch Harvest Date`) %>%
     .[complete.cases(.),]
   colnames(harvest)[c(2,5)] <- c("Accession","Date")
   harvest$Activity <- "Harvesting"
   
   # Extracted
-  extracted <- banana() %>%
+  extracted <- banana %>%
     dplyr::select(Location, Crossnumber, FemaleGenotype, MaleGenotype, `Seed Extraction Date`,`Total Seeds`)%>%
     .[complete.cases(.),]
   
@@ -38,14 +38,14 @@ cleantable <- function(){
   extracted$Activity <- "Seed extraction"
   
   # Rescue
-  rescued <- banana() %>%
+  rescued <- banana %>%
     dplyr::select(Location, Crossnumber, FemaleGenotype, MaleGenotype,  `Embryo Rescue Date`, `Number of Embryo Rescued`)%>%
     .[complete.cases(.),]
   colnames(rescued)[c(2,5,6)] <- c("Accession","Date", "Number")
   rescued$Activity <- "Embryo Rescue"
   
   # Germination
-  germinated <- banana() %>%
+  germinated <- banana %>%
     dplyr::select(Location, Crossnumber, FemaleGenotype, MaleGenotype,`Germination Date`,`Number of Embryo Germinating`)%>%
     .[complete.cases(.),]
   colnames(germinated)[c(2,5,6)] <- c("Accession","Date", "Number")
@@ -54,7 +54,7 @@ cleantable <- function(){
   # Subculture
   subcul <- subcultures() %>%
     dplyr::left_join(germinating_embryos() %>% dplyr::select(Crossnumber, PlantletID)) %>%
-    dplyr::left_join(banana() %>% dplyr::select(Crossnumber, FemaleGenotype, MaleGenotype))
+    dplyr::left_join(banana %>% dplyr::select(Crossnumber, FemaleGenotype, MaleGenotype))
   subcul$Crossnumber <- NULL
   colnames(subcul)[c(2,4)] <- c("Accession","Date")
   subcul$Activity <- "Subculturing"
