@@ -22,6 +22,7 @@ suppressPackageStartupMessages(library(dataframes2xls))
 suppressPackageStartupMessages(library(stringr))
 suppressPackageStartupMessages(library(vroom))
 suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(Hmisc))
 
                                
 source("data_prep/main_data.R", local = T)
@@ -52,7 +53,7 @@ BTracTFooter <- function() tagList(
          <div class="row">
          <div class="col-sm-2 col-sm-offset-3">
          <a href = "http://breedingbetterbananas.org/">
-         <img src = "bbb.png", height="65", width="120">
+         <img src = "betterbananaLogo.png", height="65", width="120">
          </a>
          </div>
          <div class="col-sm-2">
