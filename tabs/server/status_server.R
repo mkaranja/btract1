@@ -1,4 +1,6 @@
 source("data_prep/cleantable.R", local = T)
+source("data_prep/scheduler.R", local = T)
+
 activities = c("Flowering","First pollination","Repeat pollination","Bunch Harvesting","Harvested bunches","Seed Extraction","Seed extraction","Embryo Rescue","Germination")
 datemin <- min(as.Date(cleantable()$Date))
 datemax <- max(as.Date(cleantable()$Date))
@@ -78,7 +80,7 @@ statusserver <- function(env_serv) with(env_serv, local({
     result <- bbDF %>% 
       dplyr::filter(lubridate::year(Date) >= 2018) %>%
       setDT()
-    data = result[result$Activity !='Status'] # recent records
+    data <- result[result$Activity !='Status'] # recent records
   if(nrow(data)>0){  
     v = data.table(table(data$Location,data$Activity)) %>% filter(N >0)
     y = data.frame(rowSums(table(v$V1,v$V2)))
@@ -211,7 +213,7 @@ statusserver <- function(env_serv) with(env_serv, local({
       if(nrow(table(temp$Activity))>1){
         temp = temp %>%
           dplyr::group_by(Activity) %>%
-          dplyr::summarise(`Number of accessions` = n())
+          dplyr::summarise(`Number of accessions` = n(), .groups = 'drop')
         temp = left_join(data.frame(Activity=activities), temp ,by="Activity")
         temp = temp[complete.cases(temp),]
         
@@ -277,7 +279,7 @@ statusserver <- function(env_serv) with(env_serv, local({
     result = result[,c("Location", "Activity", "Accession")]
     data = result %>% 
       dplyr::group_by(Location, Activity)
-    data = dplyr::summarise(data, Accessions = n())
+    data = dplyr::summarise(data, Accessions = n(), .groups = 'drop')
     data$col = data$Location
     levels(data$col) <- colorspace::rainbow_hcl(11)
     
@@ -308,7 +310,7 @@ statusserver <- function(env_serv) with(env_serv, local({
     if(is.null(input$node)){
       result = result %>% 
         dplyr::group_by(Location, Activity) %>%
-        dplyr::summarise(Accessions = n())
+        dplyr::summarise(Accessions = n(), .groups = 'drop')
     } else if(length(input$node)==1){ #!is.null(input$node) && 
       result %>%
         dplyr::filter(Location==input$node[1])
@@ -390,10 +392,10 @@ statusserver <- function(env_serv) with(env_serv, local({
  
   overdue <- reactive({
     req(input$schedule_site)
-    result = scheduler
+    result <- scheduler
     
     if(nrow(schedulerdata)>0){
-      result = result %>%
+      result <<- result %>%
         dplyr::filter(status=='Overdue')
       
       if(input$schedule_site !=''){
@@ -401,9 +403,8 @@ statusserver <- function(env_serv) with(env_serv, local({
           dplyr::filter(Location==input$schedule_site)
       }
     } else {
-      result = data.frame()
+      result <- data.frame()
     }
-    
     result
   })
   

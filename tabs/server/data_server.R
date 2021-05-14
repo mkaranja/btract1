@@ -6,7 +6,7 @@ css <- "
 dataserver <- function(env_serv) with(env_serv, local({
   
   observe({
-    updateSelectInput(session, "dt_site",label = "Site:",choices = c(unique(as.character(banana()$Location))))
+    updateSelectInput(session, "dt_site",label = "Site:",choices = c(unique(as.character(banana$Location))))
   })
   
  
@@ -15,7 +15,7 @@ dataserver <- function(env_serv) with(env_serv, local({
     
     switch(input$dataset, 
            "Flowering" = flowering(),
-           "Crosses" = banana(),# %>% select(-c(`Days in ripening shed`)),
+           "Crosses" = banana,# %>% select(-c(`Days in ripening shed`)),
            "Plantlets" = plantlets(),
            "Status" = status(),
            "Contamination" = contamination(),
@@ -89,6 +89,7 @@ dataserver <- function(env_serv) with(env_serv, local({
       janitor::remove_empty("cols") %>%
       dplyr::filter(!is.na(Location))
     colnames(result) = gsub("[.]"," ", names(result))
+    colnames(result) = gsub("_"," ", names(result))
     return(result)
   })
   output$viewdt <- renderDT({
@@ -145,8 +146,8 @@ dataserver <- function(env_serv) with(env_serv, local({
   # Summaries
   
   summaryIn <- reactive({
-    result = banana() %>%
-      dplyr::select(Location, Crossnumber,FemaleGenotype,FemalePlotName, MaleGenotype,
+    result = banana %>%
+      dplyr::select(Location, Crossnumber,FemaleGenotype,FemalePlotName, MaleGenotype,FemalePloidy,MalePloidy,
                     `First Pollination Date`,`Bunch Harvest Date`,
                     `Total Seeds`, `Good Seeds`,`Number of Embryo Rescued`,`Number of Embryo Germinating`) %>%
       dplyr::filter(FemaleGenotype !='' & MaleGenotype !='') 
@@ -171,7 +172,7 @@ dataserver <- function(env_serv) with(env_serv, local({
                        `Good Seeds` = sum(na.omit(as.integer(`Good Seeds`))),
                        `Number of Embryo Rescued`= sum(na.omit(as.integer(`Number of Embryo Rescued`))),
                        `Number of Embryo Germinating`= sum(na.omit(as.integer(`Number of Embryo Germinating`)))
-                       ) %>%
+                       , .groups = 'drop') %>%
       ungroup()
   })
   

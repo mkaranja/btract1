@@ -14,12 +14,12 @@ library(lubridate)
 overviewserver <- function(env_serv) with(env_serv, local({
  
   observe({
-    updateSelectInput(session, "site", "Select Site:", choices = c("All", levels(banana()$Location)))
+    updateSelectInput(session, "site", "Select Site:", choices = c("All", levels(banana$Location)))
   })
   
   
   crossesBox <- reactive({
-  result <- banana() %>%
+  result <- banana %>%
       dplyr::select(Location, Crossnumber,FemaleGenotype, MaleGenotype,`First Pollination Date`) %>%
       .[complete.cases(.),]
     
@@ -84,7 +84,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   
   # HARVESTED BUNCHES
   bunchesBox <- reactive({
-    result <- dplyr::select(banana(), Location, Crossnumber, FemaleGenotype, 
+    result <- dplyr::select(banana, Location, Crossnumber, FemaleGenotype, 
                             MaleGenotype, `First Pollination Date`, `Bunch Harvest Date`) %>%
       .[complete.cases(.),]
     if(input$site != "All"){ 
@@ -150,7 +150,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   ######################################################################################### 
   
   seedsBox <- reactive({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select(Location, Crossnumber,FemaleGenotype, MaleGenotype,
                     `First Pollination Date`, `Seed Extraction Date`,`Total Seeds`) %>%
       .[complete.cases(.),]
@@ -175,7 +175,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   output$n_totalseeds <- renderValueBox({
     result <- seedsBox() %>%
       dplyr::group_by(FemaleGenotype, MaleGenotype) %>%
-      dplyr::summarise(n=sum(na.omit(`Total Seeds`)))
+      dplyr::summarise(n=sum(na.omit(`Total Seeds`)), .groups = 'drop')
     box1<-valueBox(value=sum(result$n),
                    width=1,
                    color = "teal",
@@ -225,7 +225,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   ######################################################################################### 
   
   embryoBox <- reactive({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select(`Location`, `Crossnumber`, FemaleGenotype,MaleGenotype,
                     `First Pollination Date`, `Embryo Rescue Date`,`Number of Embryo Rescued`) %>%
       .[complete.cases(.),]
@@ -247,7 +247,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   output$n_rescued <- renderValueBox({
     result <- embryoBox() %>%
       dplyr::group_by(FemaleGenotype, MaleGenotype) %>%
-      dplyr::summarise(n=sum(na.omit(`Number of Embryo Rescued`)))
+      dplyr::summarise(n=sum(na.omit(`Number of Embryo Rescued`)), .groups = 'drop')
     
     box1<-valueBox(value=sum(result$n),
                    width=1,
@@ -298,7 +298,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   ######################################################################################### 
   
   germinationBox <- reactive({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select(Location, Crossnumber,FemaleGenotype,MaleGenotype,
       `First Pollination Date`,`Embryo Rescue Date`,`Germination Date`,`Number of Embryo Germinating`) %>%
       .[complete.cases(.),]
@@ -320,7 +320,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   output$n_germination <- renderValueBox({
     result <- germinationBox() %>%
       dplyr::group_by(FemaleGenotype, MaleGenotype) %>%
-      dplyr::summarise(n=sum(na.omit(`Number of Embryo Germinating`)))
+      dplyr::summarise(n=sum(na.omit(`Number of Embryo Germinating`)), .groups = 'drop')
 
     box1<-valueBox(value=sum(result$n),
                    width=1,
@@ -370,7 +370,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
     result <- openfield() %>%
       dplyr::left_join(plantlets() %>% dplyr::select(Crossnumber, PlantletID)) %>%
       dplyr::left_join(
-        banana() %>% dplyr::select(Crossnumber, FemaleGenotype, MaleGenotype, 'First Pollination Date')
+        banana %>% dplyr::select(Crossnumber, FemaleGenotype, MaleGenotype, 'First Pollination Date')
       ) %>%
       dplyr::select(Location, Crossnumber, PlantletID, FemaleGenotype, MaleGenotype, 'First Pollination Date',
                     Openfield_Transfer_Date, Number) %>%
@@ -393,7 +393,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   output$n_openfield_plantlets <- renderValueBox({
     result <- openfieldBox() %>%
       dplyr::group_by(FemaleGenotype, MaleGenotype) %>%
-      dplyr::summarise(n=sum(as.integer(na.omit(Number)))) %>%
+      dplyr::summarise(n=sum(as.integer(na.omit(Number))), .groups = 'drop') %>%
       .[complete.cases(.),]
     
     box1<-valueBox(value=sum(result$n),
@@ -452,7 +452,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   #########################################################################################
   
   output$crossesOUT <- renderUI({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select("Location","Crossnumber","FemaleGenotype", "MaleGenotype","First Pollination Date") %>%
       dplyr::mutate(
         Yearly = lubridate::year(`First Pollination Date`),
@@ -483,7 +483,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   js_bar_clicked <- JS("function(event) {Shiny.onInputChange('bar_clicked', [event.point.category]);}")
   
   output$totals_site <- renderHighchart({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select("Location","Crossnumber","FemaleGenotype", "MaleGenotype","First Pollination Date") %>%
       dplyr::mutate(
         Yearly = lubridate::year(`First Pollination Date`),
@@ -528,7 +528,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   
   output$totals <- renderHighchart({
     req(input$site)
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select(Location,Crossnumber,FemaleGenotype, MaleGenotype,`First Pollination Date`) %>%
       dplyr::mutate(day = lubridate::day(`First Pollination Date`),
                     month = lubridate::month(`First Pollination Date`),
@@ -584,7 +584,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   
   
   output$totalcrosses <- renderUI({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select(Location,Crossnumber,FemaleGenotype, MaleGenotype,`First Pollination Date`) %>% 
       .[complete.cases(.),]
     result = result %>% 
@@ -620,7 +620,7 @@ overviewserver <- function(env_serv) with(env_serv, local({
   
   # parents
   parentsInput <- reactive({
-    result <- banana() %>%
+    result <- banana %>%
       dplyr::select(Location,Crossnumber,FemaleGenotype, MaleGenotype,`First Pollination Date`) %>%
       dplyr::filter(`First Pollination Date` >= input$dateRange[1] & `First Pollination Date` <=  input$dateRange[2])
 

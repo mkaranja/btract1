@@ -4,7 +4,7 @@ labels_server <- function(env_serv) with(env_serv, local({
   # only today's data should be displayed
   
   output$downloadlabelsDT <- renderDT({
-    dt <- banana() %>%
+    dt <- banana %>%
       dplyr::select(Location,Crossnumber,FemalePlotName,Mother,MalePlotName,Father,`First Pollination Date`)# %>%
     
     DT::datatable(dt, filter = 'top', rownames = FALSE, escape = FALSE, 
@@ -14,7 +14,7 @@ labels_server <- function(env_serv) with(env_serv, local({
   
     
     downloadlabelsIn <- reactive({
-      result = banana() %>%
+      result = banana %>%
         dplyr::select(Location,Crossnumber,FemalePlotName,Mother,MalePlotName,Father,`First Pollination Date`)
       
       if(!is.null(input$downloadlabelsDT_rows_selected)){
@@ -26,7 +26,7 @@ labels_server <- function(env_serv) with(env_serv, local({
    
     # download labels
     # observeEvent(input$downloadlabels,{
-    #   custom_create_PDF(user = FALSE, Labels = banana()$Crossnumber, 
+    #   custom_create_PDF(user = FALSE, Labels = banana$Crossnumber, 
     #                     # alt_text = as.character(downloadlabelsIn()[,2]), 
     #                     name ="BarcodeLabels",
     #                     type = "matrix")
@@ -39,7 +39,7 @@ labels_server <- function(env_serv) with(env_serv, local({
           par(mfrow=c(10, 1),mar=c(1,0,1,1), oma=c(1,1,1,1)) # right align mar=c(0,30,3,0)
          
          for(i in 1:(nrow(downloadlabelsIn()))){
-           txtLabel <- noquote(grep(input$barcode_text, names(banana())))
+           txtLabel <- noquote(grep(input$barcode_text, names(banana)))
            image(
                qrencode_raster(as.character(downloadlabelsIn()[i,"Crossnumber"])), # QRcode
                   cex.main = 1.5, cex.sub = .8, asp=1, col=c("white", "black"), axes=F, 

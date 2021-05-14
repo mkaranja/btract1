@@ -5,7 +5,7 @@ tc_server <- function(env_serv) with(env_serv, local({
 
   tc_data <- reactive({
     switch(input$tc_tabs,
-           'Crosses (Embryo Rescue)' = banana() %>% 
+           'Crosses (Embryo Rescue)' = banana %>% 
              dplyr::select(Location, Crossnumber, `Embryo Rescue Date`, `Number of Embryo Rescued`) %>%
              dplyr::filter(`Number of Embryo Rescued` > 0) %>%
              dplyr::rename(Embryo_Rescue_Date = 'Embryo Rescue Date',
@@ -30,31 +30,59 @@ tc_server <- function(env_serv) with(env_serv, local({
   })
 
   observe({
-    dt <- tc_data() %>%
-      dplyr::filter(Location %in% input$tc_site)
+    req(input$tc_site)
     
-    col <- grep("Date", names(dt), value=T)
-    d <- unique(na.omit(as.Date(dt[,col])))
+    dt <- tc_data() %>%
+        dplyr::filter(Location %in% input$tc_site)%>%
+        as.data.frame()
       
-    updateDateRangeInput(session, "tcDateRange", 
-                           label = paste(gsub("_"," ",col)),
+      col <- grep("Date", names(dt), value=T)
+      col1 <- col %>%
+        str_replace_all(., "([a-z])([A-Z])", "\\1 \\2") %>%
+        capitalize()
+      
+      d <- unique(na.omit(as.Date(dt[,col])))
+      startdate <- max(d)-30  
+      updateDateRangeInput(session, "tcDateRange", 
+                           label = paste(gsub("_"," ",col1)),
                            start = min(d), 
-                           end = max(d)
-                          )
+                           end = max(d),
+                           min = min(d), 
+                           max = max(d)
+      )
+    
+    # dt <- tc_data() %>%
+    #   dplyr::filter(Location %in% input$tc_site)
+    # 
+    # col <- grep("Date", names(banana), value=T)
+    # d1 <- dt %>% 
+    #   dplyr::select(col) %>% 
+    #   unique()
+    # 
+    # d1[,col] <- lubridate::ymd(d1[,col])
+    # startdate <- max(d)-30  
+    # updateDateRangeInput(session, "tcDateRange", 
+    #                      label = paste(gsub("_"," ",col1)),
+    #                      start = min(d), 
+    #                      end = max(d),
+    #                      min = min(d), 
+    #                      max = max(d)
+    # )
   })
   
   
   
   # ----filtered data---------------------------------------
- 
+  
   tc_data_sel1 <- reactive({
     req(input$tc_site)
     req(input$tcDateRange)
     
     dt <- tc_data() %>%
-      dplyr::filter(Location %in% input$tc_site)
+      dplyr::filter(Location %in% input$tc_site)%>%
+      as.data.frame()
     
-    col <- grep("Date", names(dt))
+    col <- grep("Date", names(dt), value = T)
     
     dt <- dt[(dt[,col] >= input$tcDateRange[1] & dt[,col] <= input$tcDateRange[2]),] 
     dt[order(dt[col], decreasing = TRUE),]  
